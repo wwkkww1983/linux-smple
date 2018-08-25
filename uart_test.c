@@ -45,13 +45,12 @@ int result;//数据库操作结果
 sqlite3_stmt * stmt = NULL;//动态执行数据库 
 char *errmsg = NULL;//执行错误信息 
 
-char sql[100] = "create table Cmdtable(ID,name,command,parsetype,startadder,datanum,keep,quotaId,mode)";
-
+char sql[100] = "create table Cmdtable(ID,name,command,parsetype,startadder,datanum,keep,quotaId,mode)";//SQL语句 
 
 
 int speed_arr[] = {  B115200, B57600, B38400, B19200, B9600, B4800,
 		    B2400, B1200};
-int name_arr[] = {115200, 57600, 38400,  19200,  9600,  4800,  2400, 1200};
+int name_arr[] = {115200, 57600, 38400,  19200,  9600,  4800,  2400, 1200};//波特率 
 
 #define debugnum(data,len,prefix)  \
 { \
@@ -67,10 +66,16 @@ int name_arr[] = {115200, 57600, 38400,  19200,  9600,  4800,  2400, 1200};
 #define PORT 80
 #define BUFSIZE 2048
 //net
-int sockfd;
+int sockfd; //网络连接符 
 //int flag_up_down = 0;  //up = 1; down =0;
 
-int parse_response(char *buffer){ 
+/**
+  * 函数功能: 解析网络获取的json信息 
+  * 输入参数: 字节组
+  * 返 回 值: 无 
+  * 说    明：无
+  */ 
+void parse_response(char *buffer){ 
 	char *p,*q;
   	int i;
 	cJSON *data, *json,*code,*data_arr,*arr_item;
@@ -78,7 +83,7 @@ int parse_response(char *buffer){
 	const char *error_ptr;
     char temp_datBits[10],temp_decimalNum[10];
 
-   //printf("%s\n",buffer); 
+   //切分出json字符串 
    	p=strchr(buffer,'{'); 
 	q = strrchr(p,'}');
 
@@ -113,9 +118,10 @@ int parse_response(char *buffer){
 		{
            // printf("recv error ");
  			//printf("code type is %d\n",code->type);
+ 			//返回错误码 
             printf("\nrecv error code is %d\n",code->valueint);
 		}
-        else//recv ok
+        else//接收成功 
         {
 			printf("code type is %d\n",code->type);
             printf("\nrecv error code is %d\n",code->valueint);
@@ -146,7 +152,7 @@ int parse_response(char *buffer){
 				{
 					sqlite3_exec(db,"delete from Cmdtable",0,0,&errmsg);
 				}
-                
+                //获取字段存放数据库 
             	for(i = 0;i <arr_size;i++)
             	{
                     
@@ -203,10 +209,14 @@ int parse_response(char *buffer){
     }
       printf("\nparss ok\n");
 
-   return 0; 
-}
 
-//hostname to ip
+}
+/**
+  * 函数功能: DNS解析 
+  * 输入参数: hostname 域名 ip IP 
+  * 返 回 值: 1：成功 0：失败 
+  * 说    明：无
+  */ 
 int hostname_to_ip(char * hostname , char* ip)
 {
     struct hostent *he;
@@ -231,7 +241,12 @@ int hostname_to_ip(char * hostname , char* ip)
      
     return 1;
 }
-
+/**
+  * 函数功能: 连接服务器 
+  * 输入参数: 无
+  * 返 回 值:  
+  * 说    明：根据当前状态连接对应的接口 
+  */ 
 void connect_server()
 {
 	
@@ -412,8 +427,13 @@ void connect_server()
 
 
 }
-
-/*将大写字母转换成小写字母*/  
+/**
+  * 函数功能: 将大写字母转换成小写字母
+  * 输入参数: 字符 c 
+  * 返 回 值: 转换结果 
+  * 说    明：无
+  */ 
+  
 int tolower(int c)  
 {  
     if (c >= 'A' && c <= 'Z')  
@@ -425,7 +445,14 @@ int tolower(int c)
         return c;  
     }  
 }  
-//将十六进制的字符串转换成整数  
+
+/**
+  * 函数功能: 将十六进制的字符串转换成整数 
+  * 输入参数: 十六进制字节组s 
+  * 返 回 值: 转换结果 
+  * 说    明：无
+  */ 
+ 
 int htoi(char s[])  
 {  
     int i;  
@@ -451,8 +478,12 @@ int htoi(char s[])
     }  
     return n;  
 } 
-
-// 将str字符以spl分割,存于dst中，并返回子字符串数量
+/**
+  * 函数功能: 将str字符以spl分割,存于dst中，并返回
+  * 输入参数: 目标字符串 dst，源字符串 str 分割字符串 spl 
+  * 返 回 值: 子字符串数量
+  * 说    明：无
+  */ 
 int split(char dst[][80], char* str, const char* spl)
 {
     int n = 0;
@@ -465,7 +496,12 @@ int split(char dst[][80], char* str, const char* spl)
     }
     return n;
 }
-
+/**
+  * 函数功能: 设置波特率 
+  * 输入参数: fd 串口文件，speed 速率 
+  * 返 回 值: 无 
+  * 说    明：无
+  */ 
 void set_speed(int fd, int speed)
 {
     int   i;
@@ -487,6 +523,12 @@ void set_speed(int fd, int speed)
 	tcflush(fd,TCIOFLUSH);
     }
 }
+/**
+  * 函数功能: 设置停止位，数据位，验证位 
+  * 输入参数: fd 串口文件,databits 数据位,stopbits 停止位,parity 验证位 
+  * 返 回 值: 1:成功  0：失败 
+  * 说    明：无
+  */ 
 int set_Parity(int fd,int databits,int stopbits,int parity)
 {
     struct termios options;
@@ -632,7 +674,12 @@ int BitToInt(unsigned char *bit)
   
 }
 
-
+/**
+  * 函数功能: 接收线程 
+  * 输入参数: 无
+  * 返 回 值: 无 
+  * 说    明：无
+  */
 void receivethread(void)
 {
   	int nread,i;
@@ -666,7 +713,12 @@ void receivethread(void)
 	}
  	return;
 }
-
+/**
+  * 函数功能: 采集数据 
+  * 输入参数: 采集命令 
+  * 返 回 值: 无 
+  * 说    明：无
+  */
 void collecdata(char* cmd)
 {
 
@@ -689,7 +741,12 @@ void collecdata(char* cmd)
 		
 	  }   
 }
-
+/**
+  * 函数功能: int移位变成浮点 
+  * 输入参数: n 待移位的整数，num 移动的位数 
+  * 返 回 值: 转换的浮点型 
+  * 说    明：无
+  */
 float movedigit(const int n,const int num)
 {
 	float f = (float)n;
@@ -735,7 +792,44 @@ float movedigit(const int n,const int num)
 	return f;
 
 }
-
+/**
+  * 函数功能: 上传采集的数据 
+  * 输入参数: 无 
+  * 返 回 值: 无 
+  * 说    明：无
+  */
+void updata(void)
+{
+	printf("\nUpdata\n");	
+    if(!flag_down && flag_data && flag_net)
+	{
+			flag_up = 1;	
+			printf("\nstart Updata\n");		
+			connect_server();
+			flag_up = 0;
+	}
+	else if(!flag_data)
+	{
+		printf("\ndata is null!\n");
+	}
+	else
+	{
+		printf("\nDowning!\n");
+		sleep(5);
+		flag_up = 1;	
+		//printf("Updata\n");		
+		connect_server();
+		flag_up = 0;
+	}
+    
+ 	return;
+}
+/**
+  * 函数功能: 采集线程 
+  * 输入参数: 无
+  * 返 回 值: 无 
+  * 说    明：无
+  */
 void collectionthread(void)
 {
 	int nread,i;
@@ -750,7 +844,7 @@ void collectionthread(void)
 	
 	while(1)    
  	{ 
-		sleep(2);
+		sleep(60);
 		//printf("///////////deviceID:%s",devicesID);
 		if(flag_up || flag_down)
 		{
@@ -882,13 +976,19 @@ void collectionthread(void)
 			}
 			printf("\ncollection OK!\n");
             flag_collec = 0;
+			updata();
 		}//for
 		
    }//while 
  
  	return;
 }
-
+/**
+  * 函数功能: 获取设备信息线程 
+  * 输入参数: 无
+  * 返 回 值: 无 
+  * 说    明：无
+  */
 void getdatathread(void)
 {
 	int i,j;
@@ -1019,7 +1119,7 @@ int main(int argc, char *argv[])
 	set_speed(fd,9600); 
 	set_Parity(fd,8,1,'N'); 
 	
-	pthread_create(&updatapthread,NULL,(void*)updatathread,NULL);//
+	//pthread_create(&updatapthread,NULL,(void*)updatathread,NULL);//
 	pthread_create(&collectionpthread,NULL,(void*)collectionthread,NULL);//
 	pthread_create(&getdatapthread,NULL,(void*)getdatathread,NULL);//
 	pthread_create(&receivpethread,NULL,(void*)receivethread,NULL);//
