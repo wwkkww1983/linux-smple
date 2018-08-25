@@ -10,7 +10,3 @@ RS485
 # uart_test /dev/ttyS2
 
 
-
-
-
-、、、、、、、、、
